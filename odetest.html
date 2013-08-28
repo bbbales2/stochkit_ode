@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>Sup</title>
+<link href="jquery-ui-1.10.3/css/ui-lightness/jquery-ui-1.10.3.custom.css" rel="stylesheet">
+<script src = "jquery-ui-1.10.3/js/jquery-1.9.1.js"></script>
+<script src = "jquery-ui-1.10.3/js/jquery-ui-1.10.3.custom.js"></script>
+<script type="text/javascript" src = "odetest.js">
+</script>
+
+</head>
+<body>
+<!--The buttons are to press, the div is to fill with custom html-->
+
+<!--At the top of the page I want links so the users can click finished and running jobs-->
+Finished jobs:
+<div id = "finished_jobs"></div>
+<hr />
+Running jobs:
+<div id = "running_jobs"></div>
+<hr />
+
+<!--Right below this is a place for users to submit new jobs-->
+Submit new job:
+<br />
+Select model:
+<input id = "image-file" type = "file" />
+Increment: <input id = "step" type = "number" step = "1" />
+Time: <input id = "time" type = "number" />
+
+<button id="newjob">New Job</button>
+<hr />
+
+<!--This is how the user can refresh the job data they have-->
+<button id="refresh">Refresh</button>
+<hr />
+
+<!--This is where the job data will get rendered-->
+<div id="windows_html"></div>
+</body>
+</html>
