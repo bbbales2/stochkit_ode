@@ -32,7 +32,13 @@ namespace STOCHKIT
 	bool ODE_ready;
 	double volume, NATIMESVOLUME;
 	static const double AvogadroConstant = 6.02214E23;
-
+        typedef Input<_populationVectorType, _stoichiometryType, _propensitiesFunctorType, _dependencyGraphType> Base;
+        typedef typename Base::_populationValueType _populationValueType;
+        using Base::ParametersList;
+        using Base::simpleCalculator;
+        using Base::NumberOfSpecies;
+        using Base::SpeciesList;
+ 
  public:
         Input_ODE_before_compile(char *xmlFilename):
 		Input<_populationVectorType, _stoichiometryType, _propensitiesFunctorType, _dependencyGraphType>(xmlFilename),
@@ -315,7 +321,7 @@ namespace STOCHKIT
 			exit(1);
 		}
 
-		_populationVectorType initialPop = this->writeInitialPopulation();
+		_populationVectorType initialPop = writeInitialConcentration();
 
 		std::string line;
 		std::size_t insert_found;
@@ -391,6 +397,54 @@ namespace STOCHKIT
         	}
 	        return found;
 	}
+
+_populationValueType concentrationCalculation(std::string equation)
+{
+        std::vector<unsigned int> ParametersAffectRate;
+        std::vector<unsigned int>::iterator para_it; // iterator of parameters in link graph
+
+        ParametersAffectRate = ParametersList.analyzeParameterExpression(equation);
+
+        bool calculationStatus = false;
+
+        for( para_it = ParametersAffectRate.begin(); para_it < ParametersAffectRate.end(); ++para_it ){
+                if( ParametersList[*para_it].CalculateFlag == -1 ){
+                        calculationStatus = ParametersList.calculateParameter(*para_it);
+                        if(!calculationStatus){
+                                std::cerr << "StochKit ERROR (Input::populationCalculation): while calculating rate " << equation << std::endl;
+                                return BADRESULT;
+                        }
+                }
+        }
+
+        std::string substitutedEquation = ParametersList.parameterSubstitution(equation);
+        if( substitutedEquation.empty() ){
+                std::cerr << "StochKit ERROR (Input::populationCalculation): while calculating initial population " << equation << std::endl;
+                return BADRESULT;
+        }
+
+        double calculatedPopulation = simpleCalculator.calculateString(substitutedEquation);
+
+        return (_populationValueType)calculatedPopulation;
+}
+
+_populationVectorType writeInitialConcentration()
+{
+          _populationValueType cur_population;
+          _populationVectorType X(NumberOfSpecies);
+
+          for(int i=0; i<NumberOfSpecies; ++i){
+                cur_population = concentrationCalculation(SpeciesList[i].InitialPopulation);
+                if( cur_population == BADRESULT ){
+                        std::cerr << "StochKit ERROR (Input_ODE_before_compilation::writeInitialConcentration): while calculating initial population of " << SpeciesList[i].Id << std::endl;
+                        exit(1);
+                }
+
+                X[i] = cur_population;
+          }
+
+          return X;
+}
 
  };
 
